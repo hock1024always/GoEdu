@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Download Example</title>
+</head>
+<body>
+<button onclick="downloadFile()">Download File</button>
+
+<script>
+    async function downloadFile() {
+        try {
+            const response = await fetch('/download');
+            const data = await response.json();
+            const fileURL = data.fileURL;
+
+            // 创建一个 a 标签并触发下载
+            const a = document.createElement('a');
+            a.href = fileURL;
+            a.download = 'file.zip'; // 设置下载文件名
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+        } catch (error) {
+            console.error('Error downloading file:', error);
+        }
+    }
+</script>
+</body>
+</html>
