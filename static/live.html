@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Video Live Streaming</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            text-align: center;
+        }
+        #video-container {
+            margin-top: 20px;
+        }
+        video {
+            width: 100%;
+            max-width: 600px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        button {
+            padding: 10px 20px;
+            margin: 10px;
+            border: none;
+            background-color: #007bff;
+            color: white;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+<h1>视频直播</h1>
+<div id="video-container">
+    <video id="video" autoplay></video>
+</div>
+<button id="startButton">开始直播</button>
+<button id="joinButton">接收直播</button>
+
+<script>
+    const video = document.getElementById('video');
+    const startButton = document.getElementById('startButton');
+    const joinButton = document.getElementById('joinButton');
+    const ws = new WebSocket('ws://localhost:9090/user/video');
+
+    let isHosting = false; // 标记是否为主播
+    let localStream;
+
+    // 初始化 WebRTC
+    const peerConnection = new RTCPeerConnection({
+        iceServers: [{ urls: 'stun:stun.l.google.com:19302' }]
+    });
+
+    // 监听 ICE 候选
+    peerConnection.onicecandidate = event => {
+        if (event.candidate) {
+            ws.send(JSON.stringify({ type: 'candidate', candidate: event.candidate }));
+            console.log("Sent ICE candidate:", event.candidate);
+        }
+    };
+
+    // 监听远端流
+    peerConnection.ontrack = event => {
+        video.srcObject = event.streams[0];
+        console.log("Remote stream received");
+    };
+
+    // WebSocket 信令通信
+    ws.onmessage = async event => {
+        const data = JSON.parse(event.data);
+        console.log("Received signaling message:", data);
+
+        if (data.type === 'offer') {
+            // 接收 offer 并生成 answer
+            await peerConnection.setRemoteDescription(new RTCSessionDescription(data));
+            const answer = await peerConnection.createAnswer();
+            await peerConnection.setLocalDescription(answer);
+            ws.send(JSON.stringify(peerConnection.localDescription));
+            console.log("Sent answer");
+        } else if (data.type === 'answer') {
+            // 接收 answer
+            await peerConnection.setRemoteDescription(new RTCSessionDescription(data));
+            console.log("Received answer");
+        } else if (data.type === 'candidate') {
+            // 接收 ICE 候选
+            await peerConnection.addIceCandidate(new RTCIceCandidate(data.candidate));
+            console.log("Received ICE candidate");
+        }
+    };
+
+    ws.onerror = error => {
+        console.error("WebSocket error:", error);
+    };
+
+    // 开始直播
+    startButton.onclick = async () => {
+        if (!isHosting) {
+            try {
+                localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+                video.srcObject = localStream;
+                localStream.getTracks().forEach(track => peerConnection.addTrack(track, localStream));
+                const offer = await peerConnection.createOffer();
+                await peerConnection.setLocalDescription(offer);
+                ws.send(JSON.stringify(peerConnection.localDescription));
+                console.log("Sent offer");
+                isHosting = true;
+                startButton.disabled = true;
+                joinButton.disabled = true;
+            } catch (err) {
+                console.error("Error accessing camera:", err);
+            }
+        }
+    };
+
+    // 接收直播
+    joinButton.onclick = () => {
+        if (!isHosting) {
+            joinButton.disabled = true;
+            startButton.disabled = true;
+        }
+    };
+</script>
+</body>
+</html>
+
+

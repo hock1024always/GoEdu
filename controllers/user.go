@@ -144,7 +144,7 @@ func (u UserController) Login(c *gin.Context) {
 
 // 注销用户
 func (u UserController) UserDelete(c *gin.Context) {
-	//接受用户名 密码
+	//接受Token
 	token := c.DefaultPostForm("token", "")
 	//鉴权
 	username := models.ValidateToken(token)
@@ -172,25 +172,18 @@ func (u UserController) UserDelete(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"isAuthenticated": "true"})
 }
 
-//func (u UserController) GetVoteList(c *gin.Context) {
-//	//接受用户名 密码
-//	username := c.DefaultPostForm("username", "")
-//	password := c.DefaultPostForm("password", "")
+//func (u UserController) GetChatRecords(c *gin.Context) {
+//	//接受Token
+//	token := c.DefaultPostForm("token", "")
+//	//鉴权
+//	username := models.ValidateToken(token)
+//	user1, _ := models.CheckUserExist(username)
+//	if user1.Id == 0 {
+//		models.ReturnError(c, 4012, "用户名不存在")
+//		return
+//	}
 //
-//	//验证 用户名或者密码为空 用户名不存在 密码错误
-//	if username == "" || password == "" {
-//		ReturnError(c, 4011, "用户名或密码为空")
-//		return
-//	}
-//	user1, err := models.CheckUserExist(username)
-//	if err != nil {
-//		ReturnError(c, 4012, "用户名不存在")
-//		return
-//	}
-//	if user1.Password != password {
-//		ReturnError(c, 4013, "密码错误")
-//		return
-//	}
+//	//获取聊天记录
 //
 //	//获取投票列表
 //	voteList, err2 := models.GetVoteList(user1.Id, "id desc")
@@ -200,7 +193,7 @@ func (u UserController) UserDelete(c *gin.Context) {
 //	}
 //	ReturnSuccess(c, 0, "获取投票列表成功", voteList, 1)
 //}
-//
+
 //// 修改用户密码
 //func (u UserController) ModifyPassword(c *gin.Context) {
 //	//接受用户名 密码

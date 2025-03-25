@@ -132,20 +132,7 @@ func ParseToken(tokenString string) (*jwt.Token, error) {
 func ValidateToken(tokenString string) string {
 	// 解析 Token
 	token, _ := ParseToken(tokenString)
-	//if err != nil {
-	//	// 如果解析失败，打印错误信息并返回空字符串
-	//	fmt.Println("Token解析失败")
-	//	return ""
-	//}
 	claims, _ := token.Claims.(jwt.MapClaims)
 	return claims["username"].(string)
-	// 验证 Token 是否有效
-	//if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
-	//	// 如果 Token 有效，返回用户名
-	//	return claims["username"].(string)
-	//} else {
-	//	// 如果 Token 无效，打印错误信息并返回空字符串
-	//	fmt.Println("Token无效")
-	//	return ""
-	//}
+
 }

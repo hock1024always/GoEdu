@@ -31,10 +31,16 @@ func Router() *gin.Engine {
 		user.POST("/login", controllers.UserController{}.Login)
 		//实现删除用户的路由 username password confirm_sentence
 		user.POST("/delete", controllers.UserController{}.UserDelete)
-		//// 实现用户获取自己的投票记录 username password
-		//user.POST("/get_vote_list", controllers.UserController{}.GetVoteList)
+		//实现websocket的路由
+		user.GET("/ws", controllers.UserController{}.WsHandler)
+		//实现用户视频功能
+		user.GET("/video", controllers.UserController{}.LiveHandler)
+		//// 实现用户获取自己的聊天记录 token
+		//user.POST("/get_chat_records", controllers.UserController{}.GetChatRecords)
 		////实现用户修改密码 username password new_password confirm_new_password
 		//user.POST("/modify_password", controllers.UserController{}.ModifyPassword)
+		//实现用户于机器学习交互 ws
+		user.GET("/ws/ai", controllers.UserController{}.AIHandler)
 	}
 
 	return r

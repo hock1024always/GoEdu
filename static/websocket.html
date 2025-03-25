@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebSocket Chat Room</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+        }
+        #chat-box {
+            width: 100%;
+            max-width: 600px;
+            margin: 0 auto;
+            border: 1px solid #ccc;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        #chat-box h1 {
+            margin: 0 0 20px;
+        }
+        #output {
+            height: 300px;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            padding: 10px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+        }
+        #output p {
+            margin: 5px 0;
+        }
+        .incoming {
+            text-align: left;
+        }
+        .outgoing {
+            text-align: right;
+        }
+        .username {
+            font-weight: bold;
+        }
+        input[type="text"] {
+            width: calc(100% - 110px);
+            padding: 10px;
+            margin-right: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        button {
+            padding: 10px 20px;
+            border: none;
+            background-color: #007bff;
+            color: white;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+<div id="chat-box">
+    <h1>WebSocket 聊天室</h1>
+    <div id="output"></div>
+    <input type="text" id="username" placeholder="用户名">
+    <input type="text" id="data" placeholder="消息内容">
+    <button onclick="sendMessage()">发送消息</button>
+    <button onclick="connectWebSocket()">连接 WebSocket</button>
+    <button onclick="disconnectWebSocket()">断开连接</button>
+</div>
+
+<script>
+    var ws;
+
+    // 初始化 WebSocket 连接
+    function connectWebSocket() {
+        if (!ws || ws.readyState === WebSocket.CLOSED) {
+            ws = new WebSocket('ws://localhost:9090/user/ws');
+            ws.onopen = function() {
+                appendMessage("WebSocket 已连接", "system");
+            };
+            ws.onclose = function() {
+                appendMessage("WebSocket 已关闭", "system");
+            };
+            ws.onerror = function(error) {
+                appendMessage("WebSocket 错误: " + error, "system");
+            };
+            ws.onmessage = function(event) {
+                var message = JSON.parse(event.data);
+                appendMessage(`${message.username}: ${message.data}`, message.username);
+            };
+        }
+    }
+
+    // 断开 WebSocket 连接
+    function disconnectWebSocket() {
+        if (ws && ws.readyState !== WebSocket.CLOSED) {
+            ws.close();
+            ws = null;
+            appendMessage("WebSocket 已手动断开", "system");
+        }
+    }
+
+    // 发送消息
+    function sendMessage() {
+        var username = document.getElementById('username').value;
+        var data = document.getElementById('data').value;
+
+        if (!ws || ws.readyState !== WebSocket.OPEN) {
+            appendMessage("WebSocket 未连接，请先连接", "system");
+            return;
+        }
+
+        var message = {
+            username: username,
+            data: data
+        };
+        ws.send(JSON.stringify(message));
+        document.getElementById('data').value = ''; // 清空输入框
+    }
+
+    // 在对话框中添加消息
+    function appendMessage(text, username) {
+        var output = document.getElementById('output');
+        var messageElement = document.createElement('p');
+        messageElement.className = username === document.getElementById('username').value ? 'outgoing' : 'incoming';
+        messageElement.innerHTML = `<span class="username">${username}</span>: ${text}`;
+        output.appendChild(messageElement);
+        output.scrollTop = output.scrollHeight; // 滚动到最新消息
+    }
+</script>
+</body>
+</html>

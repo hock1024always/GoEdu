@@ -1,4 +1,4 @@
-package main
+package models
 
 import (
 	"bytes"
@@ -20,14 +20,14 @@ type Message struct {
 	Content string `json:"content"`
 }
 
-func getAIResponse(prompt string) (string, error) {
+func GetAIResponse(prompt string) (string, error) {
 	// DeepSeek API 的 URL 和 API 密钥
 	apiURL := "https://openrouter.ai/api/v1/chat/completions"                             // 替换为正确的 API URL
 	apiKey := "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" // 替换为你的 DeepSeek API 密钥
 
 	// 构造请求体
 	requestBody := DeepSeekRequest{
-		Model: "deepseek/deepseek-r1-distill-llama-70b:free", // 使用 GPT-3.5 Turbo 模型（或其他支持的模型）
+		Model: "deepseek/deepseek-r1-distill-llama-70b:free", // 使用 deepseek 模型（或其他支持的模型）
 		Messages: []Message{
 			{Role: "user", Content: prompt},
 		},
@@ -86,14 +86,4 @@ func getAIResponse(prompt string) (string, error) {
 		}
 	}
 	return "", fmt.Errorf("failed to extract response content from %s", apiURL)
-}
-
-func main() {
-	prompt := "我需要你生成主题为“人工智能教学教案”PPT的大纲，请你以json格式返回给我每一页的大致内容（目录）"
-	response, err := getAIResponse(prompt)
-	if err != nil {
-		fmt.Println("Error:", err)
-		return
-	}
-	fmt.Println("AI 回答:", response)
 }
